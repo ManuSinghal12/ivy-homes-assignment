@@ -12,14 +12,14 @@
         "active_listings": 2508,
         "corrupt_listing_ids": [],
         "total_monthly_rent": 0,
-        "avg_price_per_sqft_2bhk": 0.0,
+        "avg_price_per_sqft_2bhk": 38128,
         "costliest_project": {
-            "project_id": "",
-            "price_max_inr": 0
+            "project_id": "P60085",
+            "price_max_inr": 30130000
         },
-        "listings_last_7_days": 0,
+        "listings_last_7_days": 198,
         "fake_listing_ids": [],
-        "projects_with_wrong_listing_count": 0
+        "projects_with_wrong_listing_count": 356
     },
     "findings": [
         {
@@ -62,7 +62,20 @@
             "impact": "High. Inventory counts and analytics will overestimate physical supply by over 60x without deduplication.",
             "evidence": [
                 "100-6000047",
-                "100-6000047"
+                "MAG-6001603"
+            ]
+        },
+        {
+            "endpoint": "/v1/projects",
+            "category": "completeness",
+            "documented": "Returns metadata per project including a `total_listings` count representing active listings.",
+            "actual": "356 out of 400 projects report inaccurate `total_listings` counts when cross-referenced against retrievable records.",
+            "how_found": "Paginating through `/v1/projects`, extracting `total_listings`, and comparing against grouped counts from `/v1/listings`.",
+            "impact": "High. Frontends displaying project summary counts will show inaccurate availability data to users.",
+            "evidence": [
+                "P60001",
+                "P60002",
+                "P60003"
             ]
         }
     ]
