@@ -8,7 +8,7 @@
     },
     "answers": {
         "total_listing_records": 3300,
-        "unique_properties": 0,
+        "unique_properties": 50,
         "active_listings": 2508,
         "corrupt_listing_ids": [],
         "total_monthly_rent": 0,
@@ -51,6 +51,18 @@
                 "SQU-6001937",
                 "DWE-6002796",
                 "MAG-6000794"
+            ]
+        },
+        {
+            "endpoint": "/v1/listings",
+            "category": "schema",
+            "documented": "Claims each listing record corresponds to exactly one physical property.",
+            "actual": "3,300 retrievable listing records describe only 50 unique physical properties, showing extensive duplication.",
+            "how_found": "Generated composite property keys using GPS coordinates, floor, bedrooms, and carpet area, then grouped listings by key.",
+            "impact": "High. Inventory counts and analytics will overestimate physical supply by over 60x without deduplication.",
+            "evidence": [
+                "100-6000047",
+                "100-6000047"
             ]
         }
     ]
