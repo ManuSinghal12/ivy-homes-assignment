@@ -7,9 +7,9 @@
         "demo_url": ""
     },
     "answers": {
-        "total_listing_records": 0,
+        "total_listing_records": 3300,
         "unique_properties": 0,
-        "active_listings": 0,
+        "active_listings": 2508,
         "corrupt_listing_ids": [],
         "total_monthly_rent": 0,
         "avg_price_per_sqft_2bhk": 0.0,
@@ -23,13 +23,35 @@
     },
     "findings": [
         {
-            "endpoint": "",
-            "category": "",
-            "documented": "",
-            "actual": "",
-            "how_found": "",
-            "impact": "",
+            "endpoint": "*",
+            "category": "auth",
+            "documented": "Append the API key as a query parameter (?api_key=...)",
+            "actual": "The API requires the key to be sent in the X-API-Key request header, not as a query param.",
+            "how_found": "Wrote a test script following the docs and the server returned an error instructing to use the header.",
+            "impact": "Crucial. Following the documentation makes it impossible to authenticate any request.",
             "evidence": []
+        },
+        {
+            "endpoint": "/auth/login",
+            "category": "auth",
+            "documented": "Returns `token`, expires in 86400s (24h), and claims there is no refresh flow.",
+            "actual": "Returns `access_token`, expires in 900s (15m), and includes a `refresh_token` with a `/auth/refresh` URL.",
+            "how_found": "Inspected the actual response body of a successful POST /auth/login request.",
+            "impact": "High. The app will crash trying to read the wrong token key, and sessions will expire in 15 minutes instead of 24 hours.",
+            "evidence": []
+        },
+        {
+            "endpoint": "/v1/listings",
+            "category": "completeness",
+            "documented": "Claims inactive listings are excluded server-side and safe to show users. The `is_live` field is undocumented.",
+            "actual": "The endpoint returns hundreds of inactive listings, distinguishable only by the undocumented `is_live: false` boolean.",
+            "how_found": "Downloaded the entire dataset and filtered for `is_live === false`.",
+            "impact": "Critical. Frontends relying on the documentation will display withdrawn or sold properties to users.",
+            "evidence": [
+                "SQU-6001937",
+                "DWE-6002796",
+                "MAG-6000794"
+            ]
         }
     ]
 }
