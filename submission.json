@@ -11,8 +11,8 @@
         "unique_properties": 50,
         "active_listings": 2508,
         "corrupt_listing_ids": [],
-        "total_monthly_rent": 4662400,
-        "avg_price_per_sqft_2bhk": 27446.88,
+        "total_monthly_rent": 0,
+        "avg_price_per_sqft_2bhk": 38128,
         "costliest_project": {
             "project_id": "P60085",
             "price_max_inr": 30130000
