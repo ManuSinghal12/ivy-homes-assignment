@@ -4,7 +4,7 @@ import { loginUser } from '../api';
 
 export default function Login({ onLogin }) {
     const [email, setEmail] = useState('demo1@ivy.homes');
-    const [password, setPassword] = useState('c5b53048af');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -53,6 +53,7 @@ export default function Login({ onLogin }) {
                     <input
                         type="password"
                         value={password}
+                        placeholder="Enter password"
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         style={styles.input}
