@@ -1,0 +1,22 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { fetchListings, getCurrentUser } from '../api';
+const PAGE_SIZE = 30;
+const savedKey = () => `ivy_favs_${getCurrentUser()?.email || 'guest'}`;
+const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+export default function Listings() {
+  const [listings, setListings] = useState([]); const [offset, setOffset] = useState(0); const [more, setMore] = useState(true); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
+  const [locality, setLocality] = useState(''); const [bedroom, setBedroom] = useState(''); const [furnishing, setFurnishing] = useState(''); const [minPrice, setMinPrice] = useState(''); const [maxPrice, setMaxPrice] = useState('');
+  const [favourites, setFavourites] = useState(() => JSON.parse(localStorage.getItem(savedKey()) || '[]'));
+  const load = async (nextOffset = 0) => { setLoading(true); setError(''); try { const data = await fetchListings(nextOffset, PAGE_SIZE); setListings(old => nextOffset ? [...old, ...(data.results || [])] : (data.results || [])); setOffset(nextOffset + (data.count || 0)); setMore(Boolean(data.has_more)); } catch (e) { setError(e.message); } finally { setLoading(false); } };
+  useEffect(() => { load(); }, []);
+  const toggleFav = (id) => { const next = favourites.includes(id) ? favourites.filter(x => x !== id) : [...favourites, id]; setFavourites(next); localStorage.setItem(savedKey(), JSON.stringify(next)); };
+  const filtered = useMemo(() => listings.filter(l => (!locality || l.locality?.toLowerCase().includes(locality.toLowerCase())) && (!bedroom || l.bedroom === Number(bedroom)) && (!furnishing || l.furnishing === furnishing) && (!minPrice || l.price >= Number(minPrice)) && (!maxPrice || l.price <= Number(maxPrice))), [listings, locality, bedroom, furnishing, minPrice, maxPrice]);
+  return <main style={styles.main}><h1>Homes for sale</h1><p style={styles.sub}>Browse live listings; filters are applied locally to every page fetched.</p>
+    <div style={styles.filters}><input placeholder="Locality" value={locality} onChange={e=>setLocality(e.target.value)} /><select value={bedroom} onChange={e=>setBedroom(e.target.value)}><option value="">Any BHK</option>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n} BHK</option>)}</select><select value={furnishing} onChange={e=>setFurnishing(e.target.value)}><option value="">Any furnishing</option><option>unfurnished</option><option>semi-furnished</option><option>fully-furnished</option></select><input type="number" placeholder="Min price" value={minPrice} onChange={e=>setMinPrice(e.target.value)} /><input type="number" placeholder="Max price" value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} /></div>
+    {error && <p style={styles.error}>{error}</p>}<p>{filtered.length} matching homes loaded</p><div style={styles.grid}>{filtered.map(item => <article key={item.listing_id} style={styles.card}><div style={styles.top}><h3>{item.apartment_name || 'Property'}</h3><button aria-label="Save listing" style={styles.heart} onClick={()=>toggleFav(item.listing_id)}><Heart size={20} color={favourites.includes(item.listing_id)?'#dc2626':'#64748b'} fill={favourites.includes(item.listing_id)?'#dc2626':'none'} /></button></div><p>{item.locality} · {item.bedroom} BHK</p><strong>{money(item.price)}</strong><p>{item.carpet_area?.toLocaleString('en-IN')} sq ft · {item.furnishing}</p><Link style={styles.button} to={`/listings/${encodeURIComponent(item.listing_id)}`}>View details</Link></article>)}</div>
+    {!loading && more && <button style={styles.load} onClick={()=>load(offset)}>Load more listings</button>}{loading && <p>Loading…</p>}</main>;
+}
+const styles={main:{padding:'2rem',maxWidth:1300,margin:'auto'},sub:{color:'#64748b'},filters:{display:'flex',flexWrap:'wrap',gap:10,margin:'1.5rem 0'},grid:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(250px,1fr))',gap:16},card:{border:'1px solid #e2e8f0',borderRadius:10,padding:16,background:'#fff'},top:{display:'flex',justifyContent:'space-between',gap:8},heart:{background:'none',border:0,cursor:'pointer'},button:{display:'inline-block',marginTop:8,color:'#fff',background:'#2563eb',padding:'8px 10px',borderRadius:5,textDecoration:'none'},load:{margin:'24px auto',display:'block',padding:'10px 16px'},error:{color:'#b91c1c'}};
