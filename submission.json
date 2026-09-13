@@ -12,7 +12,7 @@
         "active_listings": 2508,
         "corrupt_listing_ids": [],
         "total_monthly_rent": 0,
-        "avg_price_per_sqft_2bhk": 38128,
+        "avg_price_per_sqft_2bhk": 27446.88,
         "costliest_project": {
             "project_id": "P60085",
             "price_max_inr": 30130000
@@ -29,6 +29,15 @@
             "actual": "The API requires the key to be sent in the X-API-Key request header, not as a query param.",
             "how_found": "Wrote a test script following the docs and the server returned an error instructing to use the header.",
             "impact": "Crucial. Following the documentation makes it impossible to authenticate any request.",
+            "evidence": []
+        },
+        {
+            "endpoint": "/v1/analytics/summary",
+            "category": "missing_endpoint",
+            "documented": "Provides the analytics summary used by the Insights screen.",
+            "actual": "The endpoint returns HTTP 404 Not Found for an authenticated request.",
+            "how_found": "Called the documented endpoint with the required API key and bearer token.",
+            "impact": "High. The documented analytics summary cannot be consumed; the frontend derives metrics from paginated listings and projects instead.",
             "evidence": []
         },
         {
@@ -55,7 +64,7 @@
         },
         {
             "endpoint": "/v1/listings",
-            "category": "schema",
+            "category": "duplicates",
             "documented": "Claims each listing record corresponds to exactly one physical property.",
             "actual": "3,300 retrievable listing records describe only 50 unique physical properties, showing extensive duplication.",
             "how_found": "Generated composite property keys using GPS coordinates, floor, bedrooms, and carpet area, then grouped listings by key.",

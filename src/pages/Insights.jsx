@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAllListings, fetchAllProjects } from '../api';
+import { fetchAllListings, fetchAllProjects, fetchAnalyticsSummary } from '../api';
 import audit from '../../submission.json';
 import { AlertTriangle, BarChart3, Building2, CheckCircle2, Clock3, Layers, RefreshCw, ShieldAlert, TrendingUp } from 'lucide-react';
 
@@ -10,7 +10,7 @@ const propertyKey = (listing) => [listing.latitude, listing.longitude, listing.f
 const calculateInsights = (listings, projects) => {
     const uniqueProperties = new Set(listings.map(propertyKey));
     const activeListings = listings.filter((listing) => listing.is_live === true);
-    const twoBedroom = listings.filter((listing) => listing.bedroom === 2 && listing.carpet_area > 0);
+    const twoBedroom = activeListings.filter((listing) => listing.bedroom === 2 && listing.carpet_area > 0);
     const projectCounts = listings.reduce((counts, listing) => {
         if (listing.project_id) counts[listing.project_id] = (counts[listing.project_id] || 0) + 1;
         return counts;
@@ -32,13 +32,19 @@ export default function Insights() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [lastUpdated, setLastUpdated] = useState(null);
+    const [summaryStatus, setSummaryStatus] = useState('Loading documented analytics summary...');
 
     const refresh = async () => {
         setLoading(true);
         setError('');
         try {
-            const [listings, projects] = await Promise.all([fetchAllListings(), fetchAllProjects()]);
+            const [listings, projects, summary] = await Promise.all([
+                fetchAllListings(),
+                fetchAllProjects(),
+                fetchAnalyticsSummary().then(() => 'available').catch((err) => `Unavailable (${err.message})`),
+            ]);
             setAnalytics(calculateInsights(listings, projects));
+            setSummaryStatus(summary);
             setLastUpdated(new Date());
         } catch (err) {
             setError(err.message || 'Unable to refresh live insights.');
@@ -69,7 +75,7 @@ export default function Insights() {
                     </p>
                 </div>
                 <div style={styles.headerActions}>
-                    <div style={styles.cityBadge}>City: New Delhi</div>
+                    <div style={styles.cityBadge}>City: Gurgaon</div>
                     <button type="button" onClick={refresh} disabled={loading} style={styles.refreshButton}>
                         <RefreshCw size={16} /> {loading ? 'Refreshing' : 'Refresh'}
                     </button>
@@ -126,8 +132,9 @@ export default function Insights() {
 
             <section style={styles.card}>
                 <h3 style={styles.sectionTitle}>Live derived metrics</h3>
-                <p>Average 2BHK price across all records: <strong>{loading ? '...' : analytics ? `₹${formatNumber(Math.round(analytics.averagePricePerSqft))} / sq ft` : 'Unavailable'}</strong></p>
+                <p>Average active 2BHK price: <strong>{loading ? '...' : analytics ? `₹${formatNumber(analytics.averagePricePerSqft.toFixed(2))} / sq ft` : 'Unavailable'}</strong></p>
                 <p>Projects with mismatched listing counts: <strong>{metric(analytics?.projectsWithWrongCount)}</strong></p>
+                <p>Documented analytics summary: <strong>{summaryStatus}</strong></p>
                 <p style={styles.kpiSub}>These values are recalculated from the paginated API response whenever this page refreshes.</p>
                 <p style={styles.snapshotNote}>Submission snapshot baseline: {formatNumber(audit.answers.total_listing_records)} records, {formatNumber(audit.answers.unique_properties)} physical properties, and {formatNumber(audit.answers.active_listings)} active listings. The live API can change independently.</p>
             </section>
@@ -154,9 +161,9 @@ export default function Insights() {
                 <div style={styles.card}>
                     <ul style={styles.list}>
                         <li>
-                            <strong>City Inventory Focus:</strong> Live inventory and audit metrics are currently presented for New Delhi.
+                            <strong>Assigned Locality:</strong> Live inventory and audit metrics are presented for Golf Course Road, Gurgaon.
                         </li>
-                        <li><strong>2BHK Price Valuation:</strong> Average price per square foot is recalculated from all 2BHK records, matching the submission formula.</li>
+                        <li><strong>2BHK Price Valuation:</strong> Average price per square foot is recalculated from active 2BHK records, excluding corrupt and fake IDs.</li>
                         <li><strong>Inventory Integrity:</strong> Physical-property counts are derived from coordinates, floor, bedrooms, and carpet area.</li>
                     </ul>
                 </div>

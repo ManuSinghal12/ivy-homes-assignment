@@ -45,7 +45,7 @@ export const fetchListings = (offset = 0, limit = 30) => request(`/v1/listings?o
 export const fetchListing = (id) => request(`/v1/listings/${encodeURIComponent(id)}`);
 export const fetchRentals = (offset = 0, limit = 30) => request(`/v1/rentals?offset=${offset}&limit=${limit}`);
 export const fetchProjects = (offset = 0, limit = 30) => request(`/v1/projects?offset=${offset}&limit=${limit}`);
-export const fetchAnalytics = () => request('/v1/analytics');
+export const fetchAnalyticsSummary = () => request('/v1/analytics/summary');
 
 async function fetchAll(fetchPage, limit = 50) {
     const records = [];
